@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnKing Tracker</title>
+  <style>
+
+body {
+  font-family: arial;
+  background-color:#E0E5EC;
+  margin: 20px;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+#progress-bar {
+  width: 300px;
+  height: 20px;
+  border-radius: 5px;
+  background-color:#E0E5EC;
+  box-shadow: 5px 5px 10px #a8a8a8, -5px -5px 10px #ffffff;
+}
+
+#progress-fill {
+  width: 0%;
+  height: 100%;
+  background-color: #007bff;
+  border-radius: 5px;
+}
+
+#progress-text {
+  margin-left: 10px;
+}
+
+#new-cards-input {
+    background-color: #E0E5EC;
+    border-radius: 1em;
+    outline: none;
+    border: none;
+    box-shadow: inset 3px 3px 5px #a3b1c6, inset -1px -1px 5px #ffffff;
+    -webkit-appearance: none;
+    padding-left: 10px;
+    width: 5vw;
+    height: 3vh;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+button {
+    background-color: #E0E5EC;
+    box-shadow: 5px 5px 10px #a8a8a8, -5px -5px 10px #ffffff;
+    border-radius: 1em;
+    outline: none;
+    border: none;
+    height: 3vh;
+    margin: 10px 0 0 0;
+    margin-top: -2px;
+    font-weight: bold;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+button:active {
+      box-shadow: inset 1px 1px 2px #a8a8a8, inset -1px -1px 2px #ffffff;
+    }
+
+.card-container {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+#progress-color-picker {
+  flex: 1;
+  border: none;
+  outline: none;
+  background-color: transparent;
+}
+
+#progress-bar {
+  display: flex;
+  gap: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Butterfly */
+.butterfly {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(60deg) rotateY(30deg) rotateZ(-50deg);
+  width: 60px;
+  margin: -15% 0 0 80%;
+}
+
+.butterfly::before {
+  background: orange;
+  border-radius: 40%;
+  content: '';
+  display: block;
+  margin-left: -10px;
+  position: absolute;
+  top: -15px;
+  transform: rotatey(100deg);
+  width: 30px;
+  height: 100px;
+  left: 50%;
+}
+
+/* Wing */
+.wing {
+  display: block;
+  position: absolute;
+}
+
+.wing:first-child {
+  animation: left 350ms infinite;
+  animation-direction: alternate;
+  animation-fill-mode: reverse;
+  z-index: 3;
+}
+
+.wing:last-child {
+  animation: right 350ms infinite;
+  animation-direction: alternate;
+  animation-fill-mode: reverse;
+  right: 0;
+  z-index: 1;
+}
+
+.wing .fly,
+.wing .fly::after {
+  background: #ac166f;
+  transform-origin: 100% 50%;
+  overflow: hidden;
+  position: absolute;
+  border-radius: 50%;
+  right: 0;
+  top: 0;
+}
+
+.wing .fly:first-child {
+  height: 80px;
+  text-align: center;
+  top: 2px;
+  transform: rotateZ(30deg);
+  width: 130px;
+}
+
+.wing .fly:last-child {
+  height: 80px;
+  transform: rotateZ(-30deg);
+  width: 100px;
+}
+
+/* Keyframes */
+@keyframes left {
+  0% {
+    transform: rotateY(-60deg);
+  }
+
+  100% {
+    transform: rotateY(50deg);
+  }
+}
+
+@keyframes right {
+  0% {
+    transform: rotateY(180deg);
+  }
+
+  100% {
+    transform: rotateY(80deg);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+/* Tree */
+
+.tree {
+    margin: -18% -30% 0 0;
+}
+
+@keyframes leaf-odd-grow {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes leaf-even-grow {
+  0% {
+    transform: rotate(-90deg) scale(0);
+  }
+  100% {
+    transform: rotate(-90deg) scale(1);
+  }
+}
+
+.trunk,
+.branch {
+  border-radius: 25px;
+  background: linear-gradient(to right, #7f3333, #4d2020);
+}
+
+.trunk {
+  position: relative;
+  
+  width: 10px;
+  height: 500px;
+  margin: 0 auto;
+}
+
+.branch {
+  position: absolute;
+  
+  width: 5px;
+  
+  transform-origin: bottom center;
+}
+
+.branch:nth-child(even) {
+  transform: rotate(60deg);
+}
+
+.branch:nth-child(odd) {
+  transform: rotate(-60deg);
+}
+
+.branch:nth-child(1) {
+  top: 180px;
+  
+  height: 180px;
+}
+
+.branch:nth-child(2) {
+  top: 160px;
+
+  height: 150px;
+}
+
+.branch:nth-child(3) {
+  top: 120px;
+  
+  height: 150px;
+}
+
+.branch:nth-child(4) {
+  top: 100px;
+  
+  height: 120px;
+}
+
+.branch:nth-child(5) {
+  top: 60px;
+  
+  height: 120px;
+}
+
+.branch:nth-child(6) {
+  top: 55px;
+  
+  height: 80px;
+}
+
+.branch:nth-child(7) {
+  top: 10px;
+  
+  height: 80px;
+}
+
+.branch:nth-child(8) {
+  top: 5px;
+  
+  height: 40px;
+}
+
+.leaf {
+  position: absolute;
+  
+  width: 15px;
+  height: 15px;
+  
+  border-radius: 75% 0 75% 0;
+  background: linear-gradient(to right, #77ed9e, #53ad71);
+}
+
+.leaf:nth-child(odd) {
+  left: 100%;
+  
+  transform-origin: 0% 100%;
+  animation-name: leaf-odd-grow;
+  animation-duration: 4s;
+  animation-fill-mode: both;
+}
+
+.leaf:nth-child(even) {  
+  left: -150%;
+  
+  transform-origin: 50% 100%;
+  animation-name: leaf-even-grow;
+  animation-duration: 4s;
+  animation-fill-mode: both;
+}
+
+.leaf:nth-child(1) {
+  top: 5px;
+  
+  animation-delay: 3.5s;
+}
+
+.leaf:nth-child(2) {
+  top: 20px;
+  
+  animation-delay: 3s;
+}
+
+.leaf:nth-child(3) {
+  top: 50px;
+  
+  animation-delay: 2.5s;
+}
+
+.leaf:nth-child(4) {
+  top: 65px;
+  
+  animation-delay: 2s;
+}
+
+.leaf:nth-child(5) {
+  top: 95px;
+  
+  animation-delay: 1.5s;
+}
+
+.leaf:nth-child(6) {
+  top: 110px;
+  
+  animation-delay: 1s;
+}
+
+.leaf:nth-child(7) {
+  top: 140px;
+  
+  animation-delay: 0.5s;
+}
+
+@media only screen and (max-width: 768px) {
+    
+    .canvas {
+        display: none;
+    }
+    .tree {
+        display: none;
+    }
+    .wave {
+        display: none;
+    }
+    .butterfly {
+        display: none;
+    } 
+}
+
+
+</style>
+</head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard Progress Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>AnKing Progress</h1>
+  <p>Total Cards: 10628</p>
+  <br>
+  <p>New Cards Done Today:</p>
+  <div class="card-container">
+    <input type="number" id="new-cards-input" min="0" max="10628">
+    <button onclick="updateProgress()">Update Progress</button>
+    <button onclick="undoLastValue()">Undo Last Value</button> <!-- Added button for undo -->
+  </div>
+  <br>  <br>  <br>
+  <div id="progress-bar">
+    <div id="progress-fill"></div>
+  </div>
+  <input type="color" id="progress-color-picker">
+  <span id="progress-text">0/10628</span>
+
+
+
+
+
+
+
+  <div class="canvas">
+    <div class="tree">
+      <div class="trunk">
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+          <div class="leaf"></div>
+        </div>
+        <div class="branch">
+          <div class="leaf"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+
+  <div class="wave">
+    <div class="butterfly">
+        <div class="wing">
+            <div class="fly"></div>
+            <div class="fly"></div>
+        </div>
+        <div class="wing">
+            <div class="fly"></div>
+            <div class="fly"></div>
+        </div>
+    </div>
+      </div>
+</body>
+
+<script>
+    const totalCards = 10628;
+    let cumulativeCards = 0;
+
+    // Retrieve values from local storage on page load
+    window.addEventListener('load', function () {
+      const savedCumulativeCards = localStorage.getItem('cumulativeCards');
+      const savedProgressColor = localStorage.getItem('progressColor');
+
+      if (savedCumulativeCards) {
+        cumulativeCards = parseFloat(savedCumulativeCards);
+        updateProgress();
+      }
+
+      if (savedProgressColor) {
+        document.getElementById('progress-fill').style.backgroundColor = savedProgressColor;
+        document.getElementById('progress-color-picker').value = savedProgressColor;
+      }
+    });
+
+    function updateProgress() {
+      const newCards = Number(document.getElementById("new-cards-input").value);
+
+      // Validate input
+      if (newCards < 0 || newCards > totalCards) {
+        alert("Please enter a valid number of new cards between 0 and " + totalCards + ".");
+        return;
+      }
+
+      cumulativeCards += newCards;
+
+      const progress = (cumulativeCards / totalCards) * 100;
+      document.getElementById("progress-fill").style.width = `${progress}%`;
+      document.getElementById("progress-text").innerText = `${cumulativeCards} out of ${totalCards}`;
+
+      // Save values to local storage
+      localStorage.setItem('cumulativeCards', cumulativeCards);
+    }
+
+    function undoLastValue() {
+      // Subtract the last entered value
+      cumulativeCards -= Number(document.getElementById("new-cards-input").value) || 0;
+
+      // Update the progress bar and text
+      const progress = (cumulativeCards / totalCards) * 100;
+      document.getElementById("progress-fill").style.width = `${progress}%`;
+      document.getElementById("progress-text").innerText = `${cumulativeCards} out of ${totalCards}`;
+
+      // Save values to local storage
+      localStorage.setItem('cumulativeCards', cumulativeCards);
+    }
+
+    // Get the elements
+    const progressFill = document.getElementById("progress-fill");
+    const colorPicker = document.getElementById("progress-color-picker");
+
+    // Listen for color change event
+    colorPicker.addEventListener("input", function() {
+      const newColor = this.value; // Get the newly selected color
+      progressFill.style.backgroundColor = newColor; // Update the progress bar color
+
+      // Save the color to local storage
+      localStorage.setItem('progressColor', newColor);
+    });
+
+    // Initial color (optional)
+    const initialColor = "#000"; // Replace with your desired default color
+    progressFill.style.backgroundColor = initialColor;
+
+  </script>
+</html>
