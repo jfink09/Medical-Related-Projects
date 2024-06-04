@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name List with Refraction Details</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<style>
+    body {
+        background-color: #131517; /*#111721*/
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    h1 {
+        display: flex;
+        text-align: left;
+        justify-content: left;
+    }
+
+    #scatterPlot {
+        margin: auto;
+    }
+
+    #scatterPlot2 {
+        margin: auto;
+    }
+
+    #scatterPlot3 {
+        margin: auto;
+    }
+
+    input {
+        background-color: #202428;
+        color: #fff;
+        border: 1px solid #2d353c;
+        border-radius: 5px;
+        padding-left: 10px;
+        padding: 10px 20px;
+        outline: none;
+        font-size: 16px;
+    }
+
+    ::-webkit-input-placeholder {
+        color: #7a848f;
+    }
+
+    input:focus::placeholder {
+        color: transparent;
+}
+
+    /* 11 */
+button {
+  border: none;
+  background: rgb(251,33,117);
+    /*background: linear-gradient(0deg, rgba(251,33,117,1) 0%, rgba(234,76,137,1) 100%);*/
+    color: #fff;
+    overflow: hidden;
+    width: 130px;
+  height: 40px;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+button:hover {
+    text-decoration: none;
+    color: #fff;
+    cursor: pointer;
+}
+button:hover{
+  opacity: .7;
+}
+button:active{
+  box-shadow:  4px 4px 6px 0 rgba(255,255,255,.3),
+              -4px -4px 6px 0 rgba(116, 125, 136, .2), 
+    inset -4px -4px 6px 0 rgba(255,255,255,.2),
+    inset 4px 4px 6px 0 rgba(0, 0, 0, .2);
+}
+
+select{
+  background: rgb(251,33,117);
+  border: none;
+  outline: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #fff;
+  font-weight: bold;
+  -webkit-appearance: none;
+}
+
+select:hover {
+    cursor: pointer;
+}
+
+</style>
+<body>
+    <h1>SMILE NOMOGRAM</h1>
+    <input type="text" id="firstName" placeholder="First Name">
+    <input type="text" id="lastName" placeholder="Last Name">
+    <br><br><br>
+    Pre-Op Manual Refraction: <br><br><br>
+    Sphere: <input type="text" id="preOpSphere" placeholder="Sphere (-2.00)"> Cylinder: <input type="text" id="preOpCylinder" placeholder="Cylinder (-1.00)"> Axis: <input type="text" id="preOpAxis" placeholder="Axis (90)">
+    <br><br><br>
+    Corrected at Laser: <br><br><br>
+    Sphere: <input type="text" id="laserSphere" placeholder="Sphere (-0.25)"> Cylinder: <input type="text" id="laserCylinder" placeholder="Cylinder (-1.00)"> Axis: <input type="text" id="laserAxis" placeholder="Axis (180)">
+    <br><br><br>
+    3-Month Manual Refraction: <br><br><br>
+    Sphere: <input type="text" id="threeMonthSphere" placeholder="Sphere (-1.00)"> Cylinder: <input type="text" id="threeMonthCylinder" placeholder="Cylinder (-1.00)"> Axis: <input type="text" id="threeMonthAxis" placeholder="Axis (120)">
+    <br><br><br>
+    <button id="addName">Add Patient</button>
+    <br><br><br>
+    <h2>Saved Names</h2>
+    <select id="nameList"></select>
+    <div id="prescriptions"></div>
+
+
+
+    <div id="scatterPlot" style="width:1000px;height:800px;"></div>
+    <div id="scatterPlot2" style="width:1000px;height:800px;"></div>
+    <div id="scatterPlot3" style="width:1000px;height:800px;"></div>
+
+    <script>
+        const firstNameInput = document.getElementById("firstName");
+        const lastNameInput = document.getElementById("lastName");
+        const preOpSphereInput = document.getElementById("preOpSphere");
+        const preOpCylinderInput = document.getElementById("preOpCylinder");
+        const preOpAxisInput = document.getElementById("preOpAxis");
+        const laserSphereInput = document.getElementById("laserSphere");
+        const laserCylinderInput = document.getElementById("laserCylinder");
+        const laserAxisInput = document.getElementById("laserAxis");
+        const threeMonthSphereInput = document.getElementById("threeMonthSphere");
+        const threeMonthCylinderInput = document.getElementById("threeMonthCylinder");
+        const threeMonthAxisInput = document.getElementById("threeMonthAxis");
+        const nameList = document.getElementById("nameList");
+        const addNameButton = document.getElementById("addName");
+        const prescriptionsDiv = document.getElementById("prescriptions");
+
+        // Function to get saved names from local storage
+        function getSavedNames() {
+            const storedNames = localStorage.getItem("names");
+            return storedNames ? JSON.parse(storedNames) : [];
+        }
+
+        // // Function to update dropdown with names
+        // function updateNameList() {
+        //     const names = getSavedNames();
+        //     nameList.innerHTML = ""; // Clear existing options
+        //     names.forEach(name => {
+        //         const option = document.createElement("option");
+        //         option.text = name.fullName;
+        //         nameList.add(option);
+        //     });
+        // }
+
+        function updateNameList() {
+  const names = getSavedNames();
+  nameList.innerHTML = ""; // Clear existing options
+  names.forEach(name => {
+    const option = document.createElement("option");
+    option.text = name.fullName;
+    nameList.add(option);
+  });
+
+  // Trigger change event after updating options (for first user)
+  nameList.dispatchEvent(new Event('change'));
+}
+
+        // Function to display prescriptions for the selected person
+        function displayPrescriptions() {
+            const selectedIndex = nameList.selectedIndex;
+            if (selectedIndex !== -1) {
+                const names = getSavedNames();
+                const selectedName = names[selectedIndex];
+                prescriptionsDiv.innerHTML = `
+                    <h3>Prescriptions for ${selectedName.fullName}</h3>
+                    <p><strong>Pre-Op Manual Refraction:</strong> Sphere: ${selectedName.prescriptions.preOpRefraction.sphere}, Cylinder: ${selectedName.prescriptions.preOpRefraction.cylinder}, Axis: ${selectedName.prescriptions.preOpRefraction.axis}</p>
+                    <p><strong>Corrected at Laser:</strong> Sphere: ${selectedName.prescriptions.laserCorrection.sphere}, Cylinder: ${selectedName.prescriptions.laserCorrection.cylinder}, Axis: ${selectedName.prescriptions.laserCorrection.axis}</p>
+                    <p><strong>3-Month Manual Refraction:</strong> Sphere: ${selectedName.prescriptions.threeMonthRefraction.sphere}, Cylinder: ${selectedName.prescriptions.threeMonthRefraction.cylinder}, Axis: ${selectedName.prescriptions.threeMonthRefraction.axis}</p>
+                `;
+            } else {
+                prescriptionsDiv.innerHTML = "";
+            }
+        }
+        
+
+        // Function to add name to local storage and dropdown
+        function addName() {
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const preOpSphere = preOpSphereInput.value.trim();
+            const preOpCylinder = preOpCylinderInput.value.trim();
+            const preOpAxis = preOpAxisInput.value.trim();
+            const laserSphere = laserSphereInput.value.trim();
+            const laserCylinder = laserCylinderInput.value.trim();
+            const laserAxis = laserAxisInput.value.trim();
+            const threeMonthSphere = threeMonthSphereInput.value.trim();
+            const threeMonthCylinder = threeMonthCylinderInput.value.trim();
+            const threeMonthAxis = threeMonthAxisInput.value.trim();
+
+            if (!firstName || !lastName) {
+                alert("Please enter both first and last name!");
+                return;
+            }
+
+            const nameObject = {
+                fullName: `${firstName} ${lastName}`,
+                prescriptions: {
+                    preOpRefraction: {
+                        sphere: preOpSphere,
+                        cylinder: preOpCylinder,
+                        axis: preOpAxis
+                    },
+                    laserCorrection: {
+                        sphere: laserSphere,
+                        cylinder: laserCylinder,
+                        axis: laserAxis
+                    },
+                    threeMonthRefraction: {
+                        sphere: threeMonthSphere,
+                        cylinder: threeMonthCylinder,
+                        axis: threeMonthAxis
+                    }
+                }
+            };
+
+            const names = getSavedNames();
+            names.push(nameObject);
+            localStorage.setItem("names", JSON.stringify(names));
+
+            updateNameList();
+            updateScatterPlot();
+            updateScatterPlot2();
+            updateScatterPlot3();
+
+            // Clear input fields
+            firstNameInput.value = "";
+            lastNameInput.value = "";
+            preOpSphereInput.value = "";
+            preOpCylinderInput.value = "";
+            preOpAxisInput.value = "";
+            laserSphereInput.value = "";
+            laserCylinderInput.value = "";
+            laserAxisInput.value = "";
+            threeMonthSphereInput.value = "";
+            threeMonthCylinderInput.value = "";
+            threeMonthAxisInput.value = "";
+        }
+
+        // Function to update scatter plot
+        function updateScatterPlot() {
+            const names = getSavedNames();
+            const xValues = names.map(name => parseFloat(name.prescriptions.laserCorrection.sphere));
+            const yValues = names.map(name => parseFloat(name.prescriptions.threeMonthRefraction.sphere));
+            const fullNames = names.map(name => name.fullName);
+
+            const trace1 = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter',
+                text: fullNames,
+                marker: { size: 12, color:'#00FFFF' },
+                name: 'Data Points'
+            };
+
+            // Calculate best fit line
+            const n = xValues.length;
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = xValues.map((xi, i) => xi * yValues[i]).reduce((a, b) => a + b, 0);
+            const sumX2 = xValues.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+            const xBestFit = [Math.min(...xValues), Math.max(...xValues)];
+            const yBestFit = [m * Math.min(...xValues) + b, m * Math.max(...xValues) + b];
+
+            // Create the equation string for the best fit line
+            const eqStr = `y = ${m.toFixed(2)}x + ${b.toFixed(2)}`;
+            // Calculate R squared value
+            const yMean = sumY / n;
+            const SST = yValues.map(yi => Math.pow(yi - yMean, 2)).reduce((a, b) => a + b, 0);
+            const SSR = xValues.map((xi, i) => Math.pow(yValues[i] - m * xi - b, 2)).reduce((a, b) => a + b, 0);
+            const R2 = 1 - SSR / SST;
+
+            const trace2 = {
+                x: xBestFit,
+                y: yBestFit,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: 'red',
+                    dash: 'dash'
+                },
+                name: `${eqStr}<br>R² = ${R2.toFixed(3)}`
+            };
+
+            // Add y=x line
+            const xyMinMax = [0,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+            const trace3 = {
+                x: xyMinMax,
+                y: xyMinMax,
+                mode: 'lines',
+                line: { color: '#0818A8' },
+                type: 'scatter',
+                name: 'y=x line'
+            };
+
+            const layout = {
+                title: {
+                    text: 'SMILE NOMOGRAM (SPHERE)',
+                    font: {
+                        color: 'ffffff',
+                        style: 'Arial',
+                        letterSpacing: '4px'
+                    }
+                },
+                xaxis: {
+                    title: 'Correction At Laser Shere (D)',
+                    color: '#ffffff',
+                    autorange: 'reversed'
+                },
+                yaxis: {
+                    title: 'Achieved Shere (D)',
+                    color: '#ffffff',
+                    autorange: 'reversed'
+                },
+                plot_bgcolor: '#111721',
+                paper_bgcolor: '#111721',
+                legend: {
+                    font: { color: '#ffffff' }
+                }
+            };
+
+            const config = { responsive: true };
+
+            const plotData = [trace1, trace2, trace3];
+
+            Plotly.newPlot('scatterPlot', plotData, layout, config);
+        }
+
+
+
+
+
+
+
+        // Function to update scatter plot
+        function updateScatterPlot2() {
+            const names = getSavedNames();
+            const xValues = names.map(name => parseFloat(name.prescriptions.laserCorrection.cylinder));
+            const yValues = names.map(name => parseFloat(name.prescriptions.threeMonthRefraction.cylinder));
+            const fullNames = names.map(name => name.fullName);
+
+            const trace1 = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter',
+                text: fullNames,
+                marker: { size: 12, color:'#00FFFF' },
+                name: 'Data Points'
+            };
+
+            // Calculate best fit line
+            const n = xValues.length;
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = xValues.map((xi, i) => xi * yValues[i]).reduce((a, b) => a + b, 0);
+            const sumX2 = xValues.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+            const xBestFit = [Math.min(...xValues), Math.max(...xValues)];
+            const yBestFit = [m * Math.min(...xValues) + b, m * Math.max(...xValues) + b];
+
+            // Create the equation string for the best fit line
+            const eqStr = `y = ${m.toFixed(2)}x + ${b.toFixed(2)}`;
+            // Calculate R squared value
+            const yMean = sumY / n;
+            const SST = yValues.map(yi => Math.pow(yi - yMean, 2)).reduce((a, b) => a + b, 0);
+            const SSR = xValues.map((xi, i) => Math.pow(yValues[i] - m * xi - b, 2)).reduce((a, b) => a + b, 0);
+            const R2 = 1 - SSR / SST;
+
+            const trace2 = {
+                x: xBestFit,
+                y: yBestFit,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: 'red',
+                    dash: 'dash'
+                },
+                name: `${eqStr}<br>R² = ${R2.toFixed(3)}`
+            };
+
+            // Add y=x line
+            const xyMinMax = [0,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+            const trace3 = {
+                x: xyMinMax,
+                y: xyMinMax,
+                mode: 'lines',
+                line: { color: '#0818A8' },
+                type: 'scatter',
+                name: 'y=x line'
+            };
+
+            const layout = {
+                title: {
+                    text: 'SMILE NOMOGRAM (CYLINDER)',
+                    font: {
+                        color: 'ffffff',
+                        style: 'Arial',
+                        letterSpacing: '4px'
+                    }
+                },
+                xaxis: {
+                    title: 'Correction At Laser Cylinder (D)',
+                    color: '#ffffff',
+                    autorange: 'reversed'
+                },
+                yaxis: {
+                    title: 'Achieved Cylinder (D)',
+                    color: '#ffffff',
+                    autorange: 'reversed'
+                },
+                plot_bgcolor: '#111721',
+                paper_bgcolor: '#111721',
+                legend: {
+                    font: { color: '#ffffff' }
+                }
+            };
+
+            const config = { responsive: true };
+
+            const plotData = [trace1, trace2, trace3];
+
+            Plotly.newPlot('scatterPlot2', plotData, layout, config);
+        }
+
+
+
+
+
+
+
+
+
+
+
+        // Function to update scatter plot for spherical equivalent
+        function updateScatterPlot3() {
+            const names = getSavedNames();
+            const xValues = names.map(name => parseFloat(name.prescriptions.laserCorrection.sphere) + 0.5 * parseFloat(name.prescriptions.laserCorrection.cylinder));
+            const yValues = names.map(name => parseFloat(name.prescriptions.threeMonthRefraction.sphere) + 0.5 * parseFloat(name.prescriptions.threeMonthRefraction.cylinder));
+            const fullNames = names.map(name => name.fullName);
+
+            const trace1 = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter',
+                text: fullNames,
+                marker: { size: 12, color:'#00FFFF' },
+                name: 'Data Points'
+            };
+
+            // Calculate best fit line
+            const n = xValues.length;
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = xValues.map((xi, i) => xi * yValues[i]).reduce((a, b) => a + b, 0);
+            const sumX2 = xValues.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+            const xBestFit = [Math.min(...xValues), Math.max(...xValues)];
+            const yBestFit = [m * Math.min(...xValues) + b, m * Math.max(...xValues) + b];
+
+            // Create the equation string for the best fit line
+            const eqStr = `y = ${m.toFixed(2)}x + ${b.toFixed(2)}`;
+            // Calculate R squared value
+            const yMean = sumY / n;
+            const SST = yValues.map(yi => Math.pow(yi - yMean, 2)).reduce((a, b) => a + b, 0);
+            const SSR = xValues.map((xi, i) => Math.pow(yValues[i] - m * xi - b, 2)).reduce((a, b) => a + b, 0);
+            const R2 = 1 - SSR / SST;
+
+            const trace2 = {
+                x: xBestFit,
+                y: yBestFit,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: 'red',
+                    dash: 'dash'
+                },
+                name: `${eqStr}<br>R² = ${R2.toFixed(3)}`
+            };
+
+            // Add y=x line
+            const xyMinMax = [0,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+            const trace3 = {
+                x: xyMinMax,
+                y: xyMinMax,
+                mode: 'lines',
+                line: { color: '#0818A8' },
+                type: 'scatter',
+                name: 'y=x line'
+            };
+
+            const layout = {
+                title: {
+                    text: 'SMILE NOMOGRAM (SPHERICAL EQUIVALENT)',
+                    font: {
+                        color: 'ffffff',
+                        style: 'Arial',
+                        letterSpacing: '4px'
+                    }
+                },
+                xaxis: {
+                    title: 'Correction At Laser Spherical Equivalent (D)',
+                    color: '#ffffff',
+                    autorange: 'reversed'
+                },
+                yaxis: {
+                    title: 'Achieved Spherical Equivalent (D)',
+                    color: '#ffffff',
+                    autorange: 'reversed'
+                },
+                plot_bgcolor: '#111721',
+                paper_bgcolor: '#111721',
+                legend: {
+                    font: { color: '#ffffff' }
+                }
+            };
+
+            const config = { responsive: true };
+
+            const plotData = [trace1, trace2, trace3];
+
+            Plotly.newPlot('scatterPlot3', plotData, layout, config);
+        }
+
+
+       
+
+        // Load names from local storage and update scatter plot on page load
+        document.addEventListener("DOMContentLoaded", function() {
+            updateNameList();
+            updateScatterPlot();
+            updateScatterPlot2();
+            updateScatterPlot3();
+        });
+
+        // Add event listener to add name button
+        addNameButton.addEventListener("click", addName);
+
+        // Add event listener to name dropdown
+        nameList.addEventListener("change", displayPrescriptions);
+    </script>
+    <script>
+        //localStorage.clear();
+    </script>
+</body>
+</html>
