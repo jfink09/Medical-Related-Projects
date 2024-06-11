@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/zdog@1/dist/zdog.dist.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+      /*@import url(https://fonts.googleapis.com/css?family=Raleway:400,100,200,300);*/
+* {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif; }
+
+.box {
+    width: 80%;
+    background-color: #131517;
+    margin: 3em auto;
+    box-shadow: -2px -2px 8px 0 rgba(255, 255, 255, 0.1),
+    2px 2px 8px 0 rgba(0, 0, 0, 2);
+    padding: 20px 25px;
+    border-radius: 1em;
+}
+
+a {
+  color: #7a848f;
+  text-decoration: none; }
+
+input {
+  font: 16px/26px "Raleway", sans-serif; }
+
+body {
+  color: #7a848f;
+  background-color: #131517;
+  font: 16px/26px "Raleway", sans-serif; }
+
+.form-wrap {
+  background-color: #202428;
+  width: 320px;
+  margin: 3em auto;
+  border-bottom-left-radius: 1em;
+  border-bottom-right-radius: 1em;
+  border-top-right-radius: 1em;
+border-top-left-radius: 1em;
+flex: 1;}
+
+  .form-wrap .tabs {
+    overflow: hidden;
+border-top-right-radius: 1em;
+border-top-left-radius: 1em;}
+
+    .form-wrap .tabs h3 {
+      float: left;
+      width: 50%; }
+
+      .form-wrap .tabs h3 a {
+        padding: 0.5em 0;
+        text-align: center;
+        font-weight: 400;
+        background-color: #202428;
+        display: block;
+        color: #87d29a; }
+
+        .form-wrap .tabs h3 a.active {
+          background-color: #7a848f;
+        }
+
+  .form-wrap .tabs-content {
+    padding: 1.5em; }
+
+    .form-wrap .tabs-content div[id$="tab-content"] {
+      display: none; }
+
+    .form-wrap .tabs-content .active {
+      display: block !important; }
+
+  .form-wrap form .input {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    color: #7a848f;
+    font-family: inherit;
+    padding: .8em 0 10px .8em;
+    background-color: #202428;
+    border: 1px solid #2d353c;
+    outline: 0;
+    display: inline-block;
+    margin: 0 0 .8em 0;
+    padding-right: 2em;
+    width: 100%;
+border-radius: 5px;}
+
+  .form-wrap form .button {
+    width: 100%;
+    padding: .8em 0 10px .8em;
+    background-color: #123416;
+    border: 1px solid #258c10;
+    color: #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+     border-radius: 5px;
+}
+
+    .form-wrap form .button:hover {
+      opacity: 0.7; }
+
+      .form-wrap form .button:active{
+  box-shadow:  2px 2px 3px 0 rgba(255,255,255,.3),
+              -2px -2px 3px 0 rgba(116, 125, 136, .2), 
+    inset -2px -2px 3px 0 rgba(255,255,255,.2),
+    inset 2px 2px 3px 0 rgba(0, 0, 0, .2);
+}
+
+  .form-wrap form .checkbox {
+    visibility: hidden;
+    padding: 20px;
+    margin: .5em 0 1.5em; }
+
+    .form-wrap form .checkbox:checked + label:after {
+      -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+      filter: alpha(opacity=100);
+      opacity: 1;}
+
+  .form-wrap form label[for] {
+    position: relative;
+    padding-left: 20px;
+    cursor: pointer; }
+
+    .form-wrap form label[for]:before {
+      content: '';
+      position: absolute;
+      border: 1px solid #CFCFCF;
+      width: 17px;
+      height: 17px;
+      top: 0px;
+      left: -14px; }
+
+    .form-wrap form label[for]:after {
+      -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+      filter: alpha(opacity=0);
+      opacity: 0;
+      content: '';
+      position: absolute;
+      width: 9px;
+      height: 5px;
+      background-color: transparent;
+      top: 4px;
+      left: -10px;
+      border: 3px solid #87d29a;
+      border-top: none;
+      border-right: none;
+      -webkit-transform: rotate(-45deg);
+      -moz-transform: rotate(-45deg);
+      -o-transform: rotate(-45deg);
+      -ms-transform: rotate(-45deg);
+      transform: rotate(-45deg); }
+
+  .form-wrap .help-text {
+    margin-top: .6em; }
+
+    .form-wrap .help-text p {
+      text-align: center;
+      font-size: 14px; }
+
+   ::-webkit-input-placeholder {
+        color: #7a848f;
+    }
+
+    input:focus::placeholder {
+        color: transparent;
+}
+
+.objects {
+  display: flex;
+    align-items: center;
+}
+
+h1 {
+    display: flex;
+        text-align: left;
+        justify-content: left;
+        letter-spacing: 3px;
+        color: #fff;
+}
+
+img {
+  border-radius: 1em;
+  margin-right: 150px;
+}
+
+</style>
+
+<body>
+  <script>
+    const supabaseUrl = 'https://hdellsoeegafprjlhmel.supabase.co'; // Replace with your Supabase URL
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZWxsc29lZWdhZnByamxobWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc1MDg4ODUsImV4cCI6MjAzMzA4NDg4NX0.8UOT8tpvSTtvIhQ30QcNpLDiN8SHjg_Sptay5_90vuQ'; // Replace with your Supabase Anon Key
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+</script>
+  <div class="box">
+    <h1>SMILE NOMOGRAM</h1>
+    <div class="objects">
+   <br><br>
+   <img src="https://smilenomo.netlify.app/images/nomogram.png" height="400px">
+    <div class="form-wrap">
+        <div class="tabs">
+            <h3 class="signup-tab"><a class="active" href="#signup-tab-content">Sign Up</a></h3>
+            <h3 class="login-tab"><a href="#login-tab-content">Login</a></h3>
+        </div><!--.tabs-->
+    
+        <div class="tabs-content">
+            <div id="signup-tab-content" class="active">
+                <form class="signup-form" onsubmit="signUp(event)">
+                    <input type="email" class="input" id="user_email" autocomplete="off" placeholder="Email">
+                    <!--<input type="text" class="input" id="user_name" autocomplete="off" placeholder="Username">-->
+                    <input type="password" class="input" id="signup_pass" autocomplete="off" placeholder="Password">
+                    <input type="submit" class="button" value="Sign Up">
+                </form><!--.login-form-->
+                <div class="help-text">
+                    <p>By signing up, you agree to our</p>
+                    <p><a href="#">Terms of service</a></p>
+                </div><!--.help-text-->
+            </div><!--.signup-tab-content-->
+    
+            <div id="login-tab-content">
+                <form class="login-form" onsubmit="login(event)">
+                    <input type="text" class="input" id="user_login" autocomplete="off" placeholder="Email">
+                    <input type="password" class="input" id="login_pass" autocomplete="off" placeholder="Password">
+                    <input type="checkbox" class="checkbox" id="remember_me">
+                    <label for="remember_me">Remember me</label>
+    
+                    <input type="submit" class="button" value="Login">
+                </form><!--.login-form-->
+                <div class="help-text">
+                    <p><a href="#">Forget your password?</a></p>
+                </div><!--.help-text-->
+            </div><!--.login-tab-content-->
+        </div><!--.tabs-content-->
+    </div><!--.form-wrap-->
+</div><!--.box-->
+  </div>
+
+    <script>
+        jQuery(document).ready(function($) {
+	tab = $('.tabs h3 a');
+
+	tab.on('click', function(event) {
+		event.preventDefault();
+		tab.removeClass('active');
+		$(this).addClass('active');
+
+		tab_content = $(this).attr('href');
+		$('div[id$="tab-content"]').removeClass('active');
+		$(tab_content).addClass('active');
+	});
+});
+
+
+
+
+
+
+
+async function signUp(event) {
+  event.preventDefault();
+  const email = document.getElementById('user_email').value;
+  const password = document.getElementById('signup_pass').value;
+  
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+  });
+  
+  if (error) {
+    console.error('Error signing up:', error.message);
+  } else {
+    console.log('User signed up successfully:', data);
+    // Switch to the login tab
+    $('.tabs h3 a').removeClass('active');
+    $('.login-tab a').addClass('active');
+    $('div[id$="tab-content"]').removeClass('active');
+    $('#login-tab-content').addClass('active');
+  }
+}
+
+
+async function login(event) {
+  event.preventDefault();
+  const email = document.getElementById('user_login').value;
+  const password = document.getElementById('login_pass').value;
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password,
+  });
+  
+  if (error) {
+    console.error('Error logging in:', error.message);
+    // Display an error message to the user
+    alert('Invalid login credentials. Please try again.');
+  } else {
+    console.log('User logged in successfully:', data);
+    // Store the user session in local storage
+    localStorage.setItem('supabaseSession', JSON.stringify(data));
+    currentUser = data.user; // Set the currentUser object
+    // Redirect to the supanomo.html page
+    window.location.href = 'https://smilenomo.netlify.app/supanomo.html';
+  }
+}
+    </script>
+</body>
+</html>

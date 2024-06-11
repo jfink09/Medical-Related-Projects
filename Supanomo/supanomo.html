@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name List with Refraction Details</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<style>
+body {
+        background-color: #131517; /*#111721*/
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+    }
+
+    h1 {
+        display: flex;
+        text-align: left;
+        justify-content: left;
+        letter-spacing: 3px;
+    }
+
+    #scatterPlot {
+        margin: auto;
+    }
+
+    #scatterPlot2 {
+        margin: auto;
+    }
+
+    #scatterPlot3 {
+        margin: auto;
+    }
+
+    input {
+        background-color: #202428;
+        color: #fff;
+        border: 1px solid #2d353c;
+        border-radius: 5px;
+        padding-left: 10px;
+        padding: 10px 20px;
+        outline: none;
+        font-size: 16px;
+        margin-right: 10px;
+    }
+
+    ::-webkit-input-placeholder {
+        color: #7a848f;
+    }
+
+    input:focus::placeholder {
+        color: transparent;
+}
+
+    /* 11 */
+button {
+border: 1px solid #8c5c10;
+  background: #342812;
+    /*background: linear-gradient(0deg, rgba(251,33,117,1) 0%, rgba(234,76,137,1) 100%);*/
+    color: #fff;
+    overflow: hidden;
+    width: 130px;
+  height: 40px;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+button:hover {
+    text-decoration: none;
+    color: #fff;
+    cursor: pointer;
+}
+button:hover{
+  opacity: .7;
+}
+button:active{
+  box-shadow:  4px 4px 6px 0 rgba(255,255,255,.3),
+              -4px -4px 6px 0 rgba(116, 125, 136, .2), 
+    inset -4px -4px 6px 0 rgba(255,255,255,.2),
+    inset 4px 4px 6px 0 rgba(0, 0, 0, .2);
+}
+
+select{
+  background: #102534;
+  border: 1px solid #0c538c;
+  outline: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #fff;
+  -webkit-appearance: none;
+}
+
+select:hover {
+    cursor: pointer;
+}
+
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+#prescriptions {
+    transform: translate(350px, -130px);
+}
+
+#chart1 {
+    margin: auto;
+}
+
+#removePatient {
+    border: 1px solid #8c1010;
+  background: #331818;
+    /*background: linear-gradient(0deg, rgba(251,33,117,1) 0%, rgba(234,76,137,1) 100%);*/
+    color: #fff;
+    overflow: hidden;
+    width: 150px;
+  height: 40px;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
+</style>
+
+<body>
+    <script>
+        const supabaseUrl = 'https://hdellsoeegafprjlhmel.supabase.co'; // Replace with your Supabase URL
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZWxsc29lZWdhZnByamxobWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc1MDg4ODUsImV4cCI6MjAzMzA4NDg4NX0.8UOT8tpvSTtvIhQ30QcNpLDiN8SHjg_Sptay5_90vuQ'; // Replace with your Supabase Anon Key
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        let currentUser = null;
+
+        supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN') {
+        currentUser = session.user;
+    } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+    }
+});
+
+    </script>
+    <h1>SMILE Nomogram</h1>
+    <br><br>
+    <input type="text" id="firstName" placeholder="Patient First Name">
+    <input type="text" id="lastName" placeholder="Patient Last Name">
+    <br><br><br>
+    <input type="number" class="script" id="preOpSphere" placeholder="Pre-Op Sph (-2.00)"><input type="number" class="script" id="preOpCylinder" placeholder="Pre-Op Cyl (-1.00)"><input type="number" class="axis" id="preOpAxis" placeholder="Pre-Op Axis (090)">
+    <br><br><br>
+    <input type="number" class="script" id="laserSphere" placeholder="Corrected Sph (-0.25)"><input type="number" class="script" id="laserCylinder" placeholder="Corrected Cyl (-1.00)"><input type="number" class="axis" id="laserAxis" placeholder="Corrected Axis (180)">
+    <br><br><br>
+    <input type="number" class="script1" id="threeMonthSphere" placeholder="Post-Op Sph (-1.00)"><input type="number" class="script" id="threeMonthCylinder" placeholder="Post-Op Cyl (-1.00)"><input type="number" class="axis" id="threeMonthAxis" placeholder="Post-Op Axis (120)">
+    <br><br><br>
+    <button id="addName">Add Patient</button>
+    <br><br><br>
+    <select id="nameList">
+        <option hidden>Select Patient</option>
+    </select>
+    <button id="removePatient" onclick="removePatient()">Delete Patient</button>
+    <div id="prescriptions"></div>
+
+
+<div id="chart1" style="width:900px;height:600px;background-color:#202428;border-radius: 1em;">
+    <div id="scatterPlot" style="width:800px;height:600px;"></div>
+</div>
+<br>
+<div id="chart1" style="width:900px;height:600px;background-color:#202428;border-radius: 1em;">
+    <div id="scatterPlot2" style="width:800px;height:600px;"></div>
+</div>
+<br>
+<div id="chart1" style="width:900px;height:600px;background-color:#202428;border-radius: 1em;">
+    <div id="scatterPlot3" style="width:800px;height:600px;"></div>
+</div>
+
+    <script>
+        const firstNameInput = document.getElementById("firstName");
+        const lastNameInput = document.getElementById("lastName");
+        const preOpSphereInput = document.getElementById("preOpSphere");
+        const preOpCylinderInput = document.getElementById("preOpCylinder");
+        const preOpAxisInput = document.getElementById("preOpAxis");
+        const laserSphereInput = document.getElementById("laserSphere");
+        const laserCylinderInput = document.getElementById("laserCylinder");
+        const laserAxisInput = document.getElementById("laserAxis");
+        const threeMonthSphereInput = document.getElementById("threeMonthSphere");
+        const threeMonthCylinderInput = document.getElementById("threeMonthCylinder");
+        const threeMonthAxisInput = document.getElementById("threeMonthAxis");
+        const nameList = document.getElementById("nameList");
+        const addNameButton = document.getElementById("addName");
+        const prescriptionsDiv = document.getElementById("prescriptions");
+
+      // Function to save patient data to Supabase
+      async function savePatientToSupabase(patientData) {
+            const { data, error } = await supabase
+                .from('patients')
+                .insert([patientData]);
+
+            if (error) {
+                console.error('Error saving patient:', error);
+            } else {
+                console.log('Patient saved successfully:', data);
+            }
+        }
+
+    // Function to retrieve patient data from Supabase
+    async function getPatientDataFromSupabase() {
+            const { data, error } = await supabase
+                .from('patients')
+                .select('*');
+
+            if (error) {
+                console.error('Error retrieving patient data:', error);
+                return [];
+            } else {
+                return data;
+            }
+        }
+
+// Function to add name to Supabase and dropdown
+async function addName() {
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const preOpSphere = preOpSphereInput.value.trim();
+            const preOpCylinder = preOpCylinderInput.value.trim();
+            const preOpAxis = preOpAxisInput.value.trim();
+            const laserSphere = laserSphereInput.value.trim();
+            const laserCylinder = laserCylinderInput.value.trim();
+            const laserAxis = laserAxisInput.value.trim();
+            const threeMonthSphere = threeMonthSphereInput.value.trim();
+            const threeMonthCylinder = threeMonthCylinderInput.value.trim();
+            const threeMonthAxis = threeMonthAxisInput.value.trim();
+
+            if (!firstName || !lastName) {
+                alert("Please enter both first and last name!");
+                return;
+            }
+
+            const patientData = {
+        first_name: firstName,
+        last_name: lastName,
+        pre_op_sphere: preOpSphere,
+        pre_op_cylinder: preOpCylinder,
+        pre_op_axis: preOpAxis,
+        laser_sphere: laserSphere,
+        laser_cylinder: laserCylinder,
+        laser_axis: laserAxis,
+        three_month_sphere: threeMonthSphere,
+        three_month_cylinder: threeMonthCylinder,
+        three_month_axis: threeMonthAxis,
+        user_id: currentUser.id
+    };
+
+            try {
+                await savePatientToSupabase(patientData);
+                await updateNameList();
+                await updateScatterPlot();
+                await updateScatterPlot2();
+                await updateScatterPlot3();
+
+                // Clear input fields
+                firstNameInput.value = "";
+                lastNameInput.value = "";
+                preOpSphereInput.value = "";
+                preOpCylinderInput.value = "";
+                preOpAxisInput.value = "";
+                laserSphereInput.value = "";
+                laserCylinderInput.value = "";
+                laserAxisInput.value = "";
+                threeMonthSphereInput.value = "";
+                threeMonthCylinderInput.value = "";
+                threeMonthAxisInput.value = "";
+            } catch (error) {
+                console.error('Error adding patient:', error)}
+        }
+
+  // Function to get saved names from Supabase
+async function getSavedNames() {
+    const patientData = await getPatientDataFromSupabase();
+    return patientData.map(patient => ({
+        id: patient.id,
+        firstName: patient.first_name,
+        lastName: patient.last_name,
+        user_id: patient.user_id,
+        preOpRefraction: {
+            sphere: patient.pre_op_sphere,
+            cylinder: patient.pre_op_cylinder,
+            axis: patient.pre_op_axis
+        },
+        laserCorrection: {
+            sphere: patient.laser_sphere,
+            cylinder: patient.laser_cylinder,
+            axis: patient.laser_axis
+        },
+        threeMonthRefraction: {
+            sphere: patient.three_month_sphere,
+            cylinder: patient.three_month_cylinder,
+            axis: patient.three_month_axis
+        }
+    }));
+}
+
+// Function to update dropdown with names
+async function updateNameList() {
+    const names = await getSavedNames();
+    nameList.innerHTML = ""; // Clear existing options
+    names.forEach(name => {
+        const option = document.createElement("option");
+        option.text = `${name.firstName} ${name.lastName}`;
+        nameList.add(option);
+    });
+
+    // Trigger change event after updating options (for first user)
+    nameList.dispatchEvent(new Event('change'));
+}
+
+// Function to display prescriptions for the selected person
+async function displayPrescriptions() {
+    const selectedIndex = nameList.selectedIndex;
+    if (selectedIndex !== -1) {
+        const names = await getSavedNames();
+        const selectedName = names[selectedIndex];
+        prescriptionsDiv.innerHTML = `
+            <h3>Prescriptions for ${selectedName.firstName} ${selectedName.lastName}</h3>
+            <p style="color: #84848c">Pre-Op Manual Refraction <span style="color: #fff;">${selectedName.preOpRefraction.sphere}&nbsp;&nbsp;${selectedName.preOpRefraction.cylinder}&nbsp;&nbsp;x ${selectedName.preOpRefraction.axis}</span></p>
+            <p style="color: #84848c">Corrected at Laser <span style="color: #fff;">${selectedName.laserCorrection.sphere}&nbsp;&nbsp;${selectedName.laserCorrection.cylinder}&nbsp;&nbsp;x ${selectedName.laserCorrection.axis}</span></p>
+            <p style="color: #84848c">3-Month Manual Refraction <span style="color: #fff;">${selectedName.threeMonthRefraction.sphere}&nbsp;&nbsp;${selectedName.threeMonthRefraction.cylinder}&nbsp;&nbsp;x ${selectedName.threeMonthRefraction.axis}</span></p>
+        `;
+    } else {
+        prescriptionsDiv.innerHTML = "";
+    }
+}
+
+        // Function to update scatter plot
+        async function updateScatterPlot() {
+            const names = await getSavedNames();
+    const xValues = names.map(name => parseFloat(name.laserCorrection.sphere));
+    const yValues = names.map(name => parseFloat(name.threeMonthRefraction.sphere) + parseFloat(name.laserCorrection.sphere));
+    const fullNames = names.map(name => `${name.firstName} ${name.lastName}`);
+
+            const trace1 = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter',
+                text: fullNames,
+                marker: { size: 12, color:'#87d29a' },
+                name: 'Data Points'
+            };
+
+            // Calculate best fit line
+            const n = xValues.length;
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = xValues.map((xi, i) => xi * yValues[i]).reduce((a, b) => a + b, 0);
+            const sumX2 = xValues.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+            const xBestFit = [Math.min(...xValues), Math.max(...xValues)];
+            const yBestFit = [m * Math.min(...xValues) + b, m * Math.max(...xValues) + b];
+
+            // Create the equation string for the best fit line
+            const eqStr = `y = ${m.toFixed(2)}x + ${b.toFixed(2)}`;
+            // Calculate R squared value
+            const yMean = sumY / n;
+            const SST = yValues.map(yi => Math.pow(yi - yMean, 2)).reduce((a, b) => a + b, 0);
+            const SSR = xValues.map((xi, i) => Math.pow(yValues[i] - m * xi - b, 2)).reduce((a, b) => a + b, 0);
+            const R2 = 1 - SSR / SST;
+
+            const trace2 = {
+                x: xBestFit,
+                y: yBestFit,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: '#ecb1f6',
+                    dash: 'dash',
+                    width: 1
+                },
+                name: `${eqStr}<br>R² = ${R2.toFixed(3)}`
+            };
+
+            // Add y=x line
+            const xyMinMax = [0,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+            const trace3 = {
+                x: xyMinMax,
+                y: xyMinMax,
+                mode: 'lines',
+                line: { color: '#f5c489', width: 1 },
+                type: 'scatter',
+                name: 'y=x line'
+            };
+
+            const layout = {
+                title: {
+                    text: 'SMILE NOMOGRAM (SPHERE)',
+                    font: {
+                        color: 'ffffff',
+                        style: 'Arial',
+                        letterSpacing: '4px',
+                        size: 20
+                    }
+                },
+                xaxis: {
+                    title: 'Correction At Laser Sphere (D)',
+                    color: '#ffffff',
+                    showgrid: false,
+                    zerolinecolor: '#313539',
+                    zerolinewidth: 2,
+                    autorange: 'reversed',
+                    titlefont: {
+                        size: 16
+                    }
+                },
+                yaxis: {
+                    title: 'Achieved Sphere (D)',
+                    color: '#ffffff',
+                    showgrid: false,
+                    zerolinecolor: '#313539',
+                    zerolinewidth: 2,
+                    autorange: 'reversed',
+                    titlefont: {
+                        size: 16
+                    }
+                },
+                plot_bgcolor: '#202428',
+                paper_bgcolor: '#202428',
+                legend: {
+                    font: { color: '#ffffff' }
+                },
+                responsive: true
+            };
+
+            const config = { responsive: true };
+
+            const plotData = [trace1, trace2, trace3];
+
+            Plotly.newPlot('scatterPlot', plotData, layout, config);
+        }
+
+               // Function to update scatter plot 2
+               async function updateScatterPlot2() {
+                const names = await getSavedNames();
+    const xValues = names.map(name => parseFloat(name.laserCorrection.cylinder));
+    const yValues = names.map(name => parseFloat(name.threeMonthRefraction.cylinder) + parseFloat(name.laserCorrection.cylinder));
+    const fullNames = names.map(name => `${name.firstName} ${name.lastName}`);
+
+            const trace1 = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter',
+                text: fullNames,
+                marker: { size: 12, color:'#87d29a' },
+                name: 'Data Points'
+            };
+
+            // Calculate best fit line
+            const n = xValues.length;
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = xValues.map((xi, i) => xi * yValues[i]).reduce((a, b) => a + b, 0);
+            const sumX2 = xValues.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+            const xBestFit = [Math.min(...xValues), Math.max(...xValues)];
+            const yBestFit = [m * Math.min(...xValues) + b, m * Math.max(...xValues) + b];
+
+            // Create the equation string for the best fit line
+            const eqStr = `y = ${m.toFixed(2)}x + ${b.toFixed(2)}`;
+            // Calculate R squared value
+            const yMean = sumY / n;
+            const SST = yValues.map(yi => Math.pow(yi - yMean, 2)).reduce((a, b) => a + b, 0);
+            const SSR = xValues.map((xi, i) => Math.pow(yValues[i] - m * xi - b, 2)).reduce((a, b) => a + b, 0);
+            const R2 = 1 - SSR / SST;
+
+            const trace2 = {
+                x: xBestFit,
+                y: yBestFit,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: '#ecb1f6',
+                    dash: 'dash',
+                    width: 1
+                },
+                name: `${eqStr}<br>R² = ${R2.toFixed(3)}`
+            };
+
+            // Add y=x line
+            const xyMinMax = [0,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+            const trace3 = {
+                x: xyMinMax,
+                y: xyMinMax,
+                mode: 'lines',
+                line: { color: '#f5c489', width: 1 },
+                type: 'scatter',
+                name: 'y=x line'
+            };
+
+            const layout = {
+                title: {
+                    text: 'SMILE NOMOGRAM (CYLINDER)',
+                    font: {
+                        color: 'ffffff',
+                        style: 'Arial',
+                        letterSpacing: '4px',
+                        size: 20
+                    }
+                },
+                xaxis: {
+                    title: 'Correction At Laser Cylinder (D)',
+                    color: '#ffffff',
+                    showgrid: false,
+                    zerolinecolor: '#313539',
+                    zerolinewidth: 2,
+                    autorange: 'reversed',
+                    titlefont: {
+                        size: 16
+                    }
+                },
+                yaxis: {
+                    title: 'Achieved Cylinder (D)',
+                    color: '#ffffff',
+                    showgrid: false,
+                    zerolinecolor: '#313539',
+                    zerolinewidth: 2,
+                    autorange: 'reversed',
+                    titlefont: {
+                        size: 16
+                    }
+                },
+                plot_bgcolor: '#202428',
+                paper_bgcolor: '#202428',
+                legend: {
+                    font: { color: '#ffffff' }
+                },
+                responsive: true
+            };
+
+            const config = { responsive: true };
+
+            const plotData = [trace1, trace2, trace3];
+
+            Plotly.newPlot('scatterPlot2', plotData, layout, config);
+        }
+
+
+        // Function to update scatter plot 3
+        async function updateScatterPlot3() {
+            const names = await getSavedNames();
+    const xValues = names.map(name => parseFloat(name.laserCorrection.sphere) + 0.5 * parseFloat(name.laserCorrection.cylinder));
+    //const yValues = names.map(name => parseFloat(name.threeMonthRefraction.sphere) + 0.5 * parseFloat(name.threeMonthRefraction.cylinder) + (parseFloat(name.laserCorrection.sphere) + 0.5 * parseFloat(name.laserCorrection.cylinder)));
+    const yValues = names.map(name => (parseFloat(name.laserCorrection.sphere) + 0.5 * parseFloat(name.laserCorrection.cylinder)) - (parseFloat(name.threeMonthRefraction.sphere) + 0.5 * parseFloat(name.threeMonthRefraction.cylinder)));
+    const fullNames = names.map(name => `${name.firstName} ${name.lastName}`);
+
+            const trace1 = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter',
+                text: fullNames,
+                marker: { size: 12, color:'#87d29a' },
+                name: 'Data Points'
+            };
+
+            // Calculate best fit line
+            const n = xValues.length;
+            const sumX = xValues.reduce((a, b) => a + b, 0);
+            const sumY = yValues.reduce((a, b) => a + b, 0);
+            const sumXY = xValues.map((xi, i) => xi * yValues[i]).reduce((a, b) => a + b, 0);
+            const sumX2 = xValues.map(xi => xi * xi).reduce((a, b) => a + b, 0);
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+            const xBestFit = [Math.min(...xValues), Math.max(...xValues)];
+            const yBestFit = [m * Math.min(...xValues) + b, m * Math.max(...xValues) + b];
+
+            // Create the equation string for the best fit line
+            const eqStr = `y = ${m.toFixed(2)}x + ${b.toFixed(2)}`;
+            // Calculate R squared value
+            const yMean = sumY / n;
+            const SST = yValues.map(yi => Math.pow(yi - yMean, 2)).reduce((a, b) => a + b, 0);
+            const SSR = xValues.map((xi, i) => Math.pow(yValues[i] - m * xi - b, 2)).reduce((a, b) => a + b, 0);
+            const R2 = 1 - SSR / SST;
+
+            const trace2 = {
+                x: xBestFit,
+                y: yBestFit,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: '#ecb1f6',
+                    dash: 'dash',
+                    width: 1
+                },
+                name: `${eqStr}<br>R² = ${R2.toFixed(3)}`
+            };
+
+            // Add y=x line
+            const xyMinMax = [0,-1,-2,-3,-4,-5,-6,-7,-8,-9];
+            const trace3 = {
+                x: xyMinMax,
+                y: xyMinMax,
+                mode: 'lines',
+                line: { color: '#f5c489', width: 1 },
+                type: 'scatter',
+                name: 'y=x line'
+            };
+
+            const layout = {
+                title: {
+                    text: 'SMILE NOMOGRAM (SPHERICAL EQUIVALENT)',
+                    font: {
+                        color: 'ffffff',
+                        style: 'Arial',
+                        letterSpacing: '4px',
+                        size: 20
+                    }
+                },
+                xaxis: {
+                    title: 'Correction At Laser Spherical Equivalent (D)',
+                    color: '#ffffff',
+                    showgrid: false,
+                    zerolinecolor: '#313539',
+                    zerolinewidth: 2,
+                    autorange: 'reversed',
+                    titlefont: {
+                        size: 16
+                    }
+                },
+                yaxis: {
+                    title: 'Achieved Spherical Equivalent (D)',
+                    color: '#ffffff',
+                    showgrid: false,
+                    zerolinecolor: '#313539',
+                    zerolinewidth: 2,
+                    autorange: 'reversed',
+                    titlefont: {
+                        size: 16
+                    }
+                },
+                plot_bgcolor: '#202428',
+                paper_bgcolor: '#202428',
+                legend: {
+                    font: { color: '#ffffff' }
+                },
+                responsive: true
+            };
+
+            const config = { responsive: true };
+
+            const plotData = [trace1, trace2, trace3];
+
+            Plotly.newPlot('scatterPlot3', plotData, layout, config);
+        }
+
+        // Load names from Supabase and update scatter plot on page load
+        document.addEventListener("DOMContentLoaded", async function() {
+            await updateNameList();
+            updateScatterPlot();
+            updateScatterPlot2();
+            updateScatterPlot3();
+        });
+
+        // Add event listener to add name button
+        addNameButton.addEventListener("click", addName);
+
+        // Add event listener to name dropdown
+        nameList.addEventListener("change", displayPrescriptions);
+    </script>
+
+    <script>
+ // Function to validate and format input value
+ function formatInput(input) {
+      let value = input.value.trim();
+  
+      // Allow empty input (optional)
+      if (value === "") {
+        return;
+      }
+  
+      // Validate for numeric input (optional)
+      if (isNaN(value)) {
+        alert("Please enter a valid number!");
+        input.value = "";
+        return;
+      }
+  
+      // Convert to number and format with two decimal places
+      value = parseFloat(value).toFixed(2);
+  
+      // Add negative sign if necessary
+      if (value > 0) {
+        value = "-" + value;
+      }
+  
+      // Update input element value
+      input.value = value;
+    }
+
+    function formatInput1(input) {
+      let value = input.value.trim();
+  
+      // Allow empty input (optional)
+      if (value === "") {
+        return;
+      }
+  
+      // Validate for numeric input (optional)
+      if (isNaN(value)) {
+        alert("Please enter a valid number!");
+        input.value = "";
+        return;
+      }
+  
+      // Convert to number and format with two decimal places
+      value = parseFloat(value).toFixed(2);
+  
+      // Update input element value
+      input.value = value;
+    }
+  
+    // Attach event listeners to all script class inputs
+    const scriptInputs = document.querySelectorAll(".script");
+    const scriptInputs1 = document.querySelectorAll(".script1");
+    scriptInputs.forEach(input => {
+      input.addEventListener("blur", () => formatInput(input));
+    });
+    scriptInputs1.forEach(input => {
+      input.addEventListener("blur", () => formatInput1(input));
+    });
+    </script>
+
+
+<script>
+
+async function removePatient() {
+    const { data: { user } } = await supabase.auth.getUser();
+    currentUser = user;
+    if (!currentUser || !currentUser.id) {
+        alert('Please log in to remove a patient.');
+        return;
+    }
+
+    const selectedIndex = nameList.selectedIndex;
+    if (selectedIndex !== -1) {
+        const names = await getSavedNames();
+        const selectedName = names[selectedIndex];
+        console.log('Selected patient:', selectedName);
+
+        if (selectedName.user_id === currentUser.id) {
+            const confirmed = confirm(`Are you sure you want to remove ${selectedName.firstName} ${selectedName.lastName}?`);
+            if (confirmed) {
+                try {
+                    const { data, error } = await supabase
+                        .from('patients')
+                        .delete()
+                        .eq('id', selectedName.id)
+                        .eq('user_id', currentUser.id);
+
+                    if (error) {
+                        console.error('Error removing patient:', error);
+                        alert('An error occurred while removing the patient. Please try again.');
+                    } else {
+                        console.log('Patient removed successfully:', data);
+                        await updateNameList();
+                        updateScatterPlot();
+                        updateScatterPlot2();
+                        updateScatterPlot3();
+                        displayPrescriptions(); // Update the displayed prescriptions
+                        alert('Patient removed successfully!');
+                    }
+                } catch (error) {
+                    console.error('Error removing patient:', error);
+                    alert('An error occurred while removing the patient. Please try again.');
+                }
+            }
+        } else {
+            alert('You can only remove patients that you added.');
+        }
+    } else {
+        alert('Please select a patient to remove.');
+    }
+}
+
+async function updateNameList() {
+    const names = await getSavedNames();
+    nameList.innerHTML = ""; // Clear existing options
+    names.forEach(name => {
+        const option = document.createElement("option");
+        option.text = `${name.firstName} ${name.lastName}`;
+        nameList.add(option);
+    });
+
+    // Trigger change event after updating options (for first user)
+    nameList.dispatchEvent(new Event('change'));
+
+    // Clear prescriptions div
+    prescriptionsDiv.innerHTML = "";
+}
+
+</script>
+</body>
+</html>
